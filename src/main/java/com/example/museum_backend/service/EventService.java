@@ -15,8 +15,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +29,8 @@ public class EventService {
     @Transactional
     public EventResponseDTO createEvent(EventRequestDTO request, String adminEmail) {
         logger.info("Creating event by admin: {}", adminEmail);
+        logger.info("Phone number received in service: {}", request.getPhoneNumber());
+        logger.info("Contact email received in service: {}", request.getContactEmail());
 
         Museum museum = museumRepository.findById(request.getMuseumId())
                 .orElseThrow(() -> new CustomExceptions.UserNotFoundException("Museum not found with id: " + request.getMuseumId()));
@@ -39,7 +41,7 @@ public class EventService {
         event.setEventCategory(request.getEventCategory());
         event.setEventType(request.getEventType());
         event.setEventDate(request.getEventDate());
-        event.setPhoneNumbers(request.getPhoneNumbers() != null ? request.getPhoneNumbers() : List.of());
+        event.setPhoneNumber(request.getPhoneNumber());
         event.setContactEmail(request.getContactEmail());
         event.setGuidePrice(request.getGuidePrice());
         event.setTicketPrice(request.getTicketPrice());
@@ -49,6 +51,8 @@ public class EventService {
 
         Event savedEvent = eventRepository.save(event);
         logger.info("Event created successfully with id: {}", savedEvent.getId());
+        logger.info("Saved phone number: {}", savedEvent.getPhoneNumber());
+        logger.info("Saved contact email: {}", savedEvent.getContactEmail());
 
         return convertToResponseDTO(savedEvent);
     }
@@ -56,6 +60,8 @@ public class EventService {
     @Transactional
     public EventResponseDTO updateEvent(Long id, EventRequestDTO request) {
         logger.info("Updating event with id: {}", id);
+        logger.info("Phone number received for update: {}", request.getPhoneNumber());
+        logger.info("Contact email received for update: {}", request.getContactEmail());
 
         Event event = eventRepository.findById(id)
                 .orElseThrow(() -> new CustomExceptions.UserNotFoundException("Event not found with id: " + id));
@@ -71,7 +77,7 @@ public class EventService {
         event.setEventCategory(request.getEventCategory());
         event.setEventType(request.getEventType());
         event.setEventDate(request.getEventDate());
-        event.setPhoneNumbers(request.getPhoneNumbers() != null ? request.getPhoneNumbers() : List.of());
+        event.setPhoneNumber(request.getPhoneNumber());
         event.setContactEmail(request.getContactEmail());
         event.setGuidePrice(request.getGuidePrice());
         event.setTicketPrice(request.getTicketPrice());
@@ -80,6 +86,8 @@ public class EventService {
 
         Event updatedEvent = eventRepository.save(event);
         logger.info("Event updated successfully with id: {}", id);
+        logger.info("Updated phone number: {}", updatedEvent.getPhoneNumber());
+        logger.info("Updated contact email: {}", updatedEvent.getContactEmail());
 
         return convertToResponseDTO(updatedEvent);
     }
@@ -106,9 +114,7 @@ public class EventService {
 
     public Page<EventResponseDTO> getAllEvents(Pageable pageable) {
         logger.debug("Fetching all events with pagination");
-
-        return eventRepository.findAll(pageable)
-                .map(this::convertToResponseDTO);
+        return eventRepository.findAll(pageable).map(this::convertToResponseDTO);
     }
 
     public Page<EventResponseDTO> getEventsByMuseumId(Long museumId, Pageable pageable) {
@@ -117,8 +123,7 @@ public class EventService {
         Museum museum = museumRepository.findById(museumId)
                 .orElseThrow(() -> new CustomExceptions.UserNotFoundException("Museum not found with id: " + museumId));
 
-        return eventRepository.findByMuseum(museum, pageable)
-                .map(this::convertToResponseDTO);
+        return eventRepository.findByMuseum(museum, pageable).map(this::convertToResponseDTO);
     }
 
     public long getTotalEventsCount() {
@@ -147,7 +152,7 @@ public class EventService {
         dto.setEventCategory(event.getEventCategory());
         dto.setEventType(event.getEventType());
         dto.setEventDate(event.getEventDate());
-        dto.setPhoneNumbers(event.getPhoneNumbers());
+        dto.setPhoneNumber(event.getPhoneNumber());
         dto.setContactEmail(event.getContactEmail());
         dto.setGuidePrice(event.getGuidePrice());
         dto.setTicketPrice(event.getTicketPrice());

@@ -29,7 +29,7 @@ public class Event {
     private String description;
 
     @ElementCollection
-    @CollectionTable(name = "service_images", joinColumns = @JoinColumn(name = "service_id"))
+    @CollectionTable(name = "event_images", joinColumns = @JoinColumn(name = "event_id"))
     @Column(name = "image_url")
     private List<String> imageUrls = new ArrayList<>();
 
@@ -44,10 +44,8 @@ public class Event {
     @Column(name = "event_date", nullable = false)
     private LocalDateTime eventDate;
 
-    @ElementCollection
-    @CollectionTable(name = "service_phone_numbers", joinColumns = @JoinColumn(name = "service_id"))
-    @Column(name = "phone_number")
-    private List<String> phoneNumbers = new ArrayList<>();
+    @Column(name = "phone_number", length = 20)
+    private String phoneNumber;
 
     @Column(name = "contact_email")
     private String contactEmail;
@@ -63,8 +61,8 @@ public class Event {
     private Location location;
 
     private Integer duration;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "museum_id", nullable = false)
     private Museum museum;
-
 }

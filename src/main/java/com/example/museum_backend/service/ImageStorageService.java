@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+// In ImageStorageService.java
+
 @Service
 public class ImageStorageService {
 
@@ -33,7 +35,7 @@ public class ImageStorageService {
         }
 
         for (MultipartFile image : images) {
-            if (image.isEmpty()) continue;
+            if (image == null || image.isEmpty()) continue;
 
             // Generate unique filename
             String originalFilename = StringUtils.cleanPath(image.getOriginalFilename());
@@ -47,22 +49,14 @@ public class ImageStorageService {
             // Generate URL
             String imageUrl = baseUrl + "/uploads/" + newFilename;
             imageUrls.add(imageUrl);
+
         }
 
         return imageUrls;
     }
 
-    public void deleteImage(String imageUrl) {
-        try {
-            String filename = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
-            Path imagePath = Paths.get(uploadDir).resolve(filename);
-            Files.deleteIfExists(imagePath);
-        } catch (IOException e) {
-            System.err.println("Failed to delete image: " + e.getMessage());
-        }
-    }
-
     private String getFileExtension(String filename) {
+        if (filename == null) return ".jpg";
         int lastDot = filename.lastIndexOf(".");
         if (lastDot > 0) {
             return filename.substring(lastDot);
