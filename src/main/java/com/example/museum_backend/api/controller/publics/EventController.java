@@ -2,6 +2,9 @@ package com.example.museum_backend.api.controller.publics;
 
 import com.example.museum_backend.exceptions.CustomExceptions;
 import com.example.museum_backend.model.dto.EventResponseDTO;
+import com.example.museum_backend.model.dto.EventSearchDTO;
+import com.example.museum_backend.model.enums.EventCategory;
+import com.example.museum_backend.model.enums.Location;
 import com.example.museum_backend.service.EventService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +17,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/public/events")
@@ -91,5 +96,147 @@ public class EventController {
             logger.error("Failed to get upcoming events", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    // ==================== SEARCH ENDPOINTS ====================
+
+    @PostMapping("/search")
+    @Operation(summary = "Search events with multiple filters")
+    public ResponseEntity<Page<EventResponseDTO>> searchEvents(
+            @RequestBody EventSearchDTO searchDTO,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "eventDate") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction) {
+
+        try {
+            Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+            Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
+
+            Page<EventResponseDTO> events = eventService.searchEvents(searchDTO, pageable);
+            return ResponseEntity.ok(events);
+        } catch (Exception e) {
+            logger.error("Failed to search events", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/search/simple")
+    @Operation(summary = "Simple search by query string")
+    public ResponseEntity<Page<EventResponseDTO>> simpleSearch(
+            @RequestParam(required = false) String query,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "eventDate") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction) {
+
+        try {
+            Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+            Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
+
+            Page<EventResponseDTO> events = eventService.simpleSearch(query, pageable);
+            return ResponseEntity.ok(events);
+        } catch (Exception e) {
+            logger.error("Failed to simple search events", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/search/category/{category}")
+    @Operation(summary = "Get events by category")
+    public ResponseEntity<Page<EventResponseDTO>> getEventsByCategory(
+            @PathVariable EventCategory category,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "eventDate") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction) {
+
+        try {
+            Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+            Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
+
+            Page<EventResponseDTO> events = eventService.getEventsByCategory(category, pageable);
+            return ResponseEntity.ok(events);
+        } catch (Exception e) {
+            logger.error("Failed to get events by category", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/search/location/{location}")
+    @Operation(summary = "Get events by location")
+    public ResponseEntity<Page<EventResponseDTO>> getEventsByLocation(
+            @PathVariable Location location,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "eventDate") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction) {
+
+        try {
+            Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+            Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
+
+            Page<EventResponseDTO> events = eventService.getEventsByLocation(location, pageable);
+            return ResponseEntity.ok(events);
+        } catch (Exception e) {
+            logger.error("Failed to get events by location", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/search/price/guide")
+    @Operation(summary = "Get events by guide price range")
+    public ResponseEntity<Page<EventResponseDTO>> getEventsByGuidePriceRange(
+            @RequestParam(required = false) Integer minPrice,
+            @RequestParam(required = false) Integer maxPrice,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "guidePrice") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction) {
+
+        try {
+            Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+            Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
+
+            Page<EventResponseDTO> events = eventService.getEventsByGuidePriceRange(minPrice, maxPrice, pageable);
+            return ResponseEntity.ok(events);
+        } catch (Exception e) {
+            logger.error("Failed to get events by guide price range", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/search/price/ticket")
+    @Operation(summary = "Get events by ticket price range")
+    public ResponseEntity<Page<EventResponseDTO>> getEventsByTicketPriceRange(
+            @RequestParam(required = false) Integer minPrice,
+            @RequestParam(required = false) Integer maxPrice,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "ticketPrice") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction) {
+
+        try {
+            Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+            Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
+
+            Page<EventResponseDTO> events = eventService.getEventsByTicketPriceRange(minPrice, maxPrice, pageable);
+            return ResponseEntity.ok(events);
+        } catch (Exception e) {
+            logger.error("Failed to get events by ticket price range", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/categories")
+    @Operation(summary = "Get all event categories")
+    public ResponseEntity<List<EventCategory>> getAllCategories() {
+        return ResponseEntity.ok(List.of(EventCategory.values()));
+    }
+
+    @GetMapping("/locations")
+    @Operation(summary = "Get all locations")
+    public ResponseEntity<List<Location>> getAllLocations() {
+        return ResponseEntity.ok(List.of(Location.values()));
     }
 }
