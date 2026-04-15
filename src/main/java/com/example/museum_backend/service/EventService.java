@@ -1,15 +1,17 @@
 package com.example.museum_backend.service;
 
 import com.example.museum_backend.exceptions.CustomExceptions;
-import com.example.museum_backend.model.dto.EventRequestDTO;
 import com.example.museum_backend.model.dto.EventResponseDTO;
+import com.example.museum_backend.model.dto.EventRequestDTO;
 import com.example.museum_backend.model.dto.EventSearchDTO;
 import com.example.museum_backend.model.entity.Event;
 import com.example.museum_backend.model.entity.Museum;
 import com.example.museum_backend.model.enums.EventCategory;
+import com.example.museum_backend.model.enums.EventType;
 import com.example.museum_backend.model.enums.Location;
 import com.example.museum_backend.repository.EventRepository;
 import com.example.museum_backend.repository.MuseumRepository;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -145,13 +147,10 @@ public class EventService {
         logger.info("Images updated successfully for event id: {}", eventId);
     }
 
-    // ==================== SEARCH METHODS ====================
+    // ==================== SEARCH METHODS WITH TICKET PRICE ====================
 
     /**
-     * Search events with multiple filters
-     * @param searchDTO search parameters
-     * @param pageable pagination and sorting
-     * @return page of filtered events
+     * Search events with multiple filters (including ticket price)
      */
     public Page<EventResponseDTO> searchEvents(EventSearchDTO searchDTO, Pageable pageable) {
         logger.debug("Searching events with filters: {}", searchDTO);
@@ -192,6 +191,64 @@ public class EventService {
     }
 
     /**
+     * Search by ticket price range only
+     */
+    public Page<EventResponseDTO> searchByTicketPrice(Integer minPrice, Integer maxPrice, Pageable pageable) {
+        logger.debug("Searching events by ticket price range: {} - {}", minPrice, maxPrice);
+
+        List<Event> allEvents = eventRepository.findAll();
+
+        List<Event> filteredEvents = allEvents.stream()
+                .filter(event -> filterByTicketPrice(event, minPrice, maxPrice))
+                .collect(Collectors.toList());
+
+        applySorting(filteredEvents, pageable.getSort());
+
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), filteredEvents.size());
+
+        List<EventResponseDTO> paginatedResults = filteredEvents.subList(
+                        Math.min(start, filteredEvents.size()),
+                        Math.min(end, filteredEvents.size())
+                ).stream()
+                .map(this::convertToResponseDTO)
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(paginatedResults, pageable, filteredEvents.size());
+    }
+
+    /**
+     * Combined search by guide price and ticket price
+     */
+    public Page<EventResponseDTO> searchByBothPrices(Integer minGuidePrice, Integer maxGuidePrice,
+                                                     Integer minTicketPrice, Integer maxTicketPrice,
+                                                     Pageable pageable) {
+        logger.debug("Searching events by guide price: {}-{} and ticket price: {}-{}",
+                minGuidePrice, maxGuidePrice, minTicketPrice, maxTicketPrice);
+
+        List<Event> allEvents = eventRepository.findAll();
+
+        List<Event> filteredEvents = allEvents.stream()
+                .filter(event -> filterByGuidePrice(event, minGuidePrice, maxGuidePrice))
+                .filter(event -> filterByTicketPrice(event, minTicketPrice, maxTicketPrice))
+                .collect(Collectors.toList());
+
+        applySorting(filteredEvents, pageable.getSort());
+
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), filteredEvents.size());
+
+        List<EventResponseDTO> paginatedResults = filteredEvents.subList(
+                        Math.min(start, filteredEvents.size()),
+                        Math.min(end, filteredEvents.size())
+                ).stream()
+                .map(this::convertToResponseDTO)
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(paginatedResults, pageable, filteredEvents.size());
+    }
+
+    /**
      * Simple search by query string (name or description)
      */
     public Page<EventResponseDTO> simpleSearch(String query, Pageable pageable) {
@@ -203,10 +260,8 @@ public class EventService {
                 .filter(event -> matchesQuery(event, query))
                 .collect(Collectors.toList());
 
-        // Apply sorting
         applySorting(filteredEvents, pageable.getSort());
 
-        // Apply pagination
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), filteredEvents.size());
 
@@ -235,7 +290,6 @@ public class EventService {
                 .sorted((e1, e2) -> e1.getEventDate().compareTo(e2.getEventDate()))
                 .collect(Collectors.toList());
 
-        // Apply pagination
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), upcomingEvents.size());
 
@@ -261,10 +315,8 @@ public class EventService {
                 .filter(event -> event.getEventCategory() == category)
                 .collect(Collectors.toList());
 
-        // Apply sorting
         applySorting(filteredEvents, pageable.getSort());
 
-        // Apply pagination
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), filteredEvents.size());
 
@@ -290,10 +342,8 @@ public class EventService {
                 .filter(event -> event.getLocation() == location)
                 .collect(Collectors.toList());
 
-        // Apply sorting
         applySorting(filteredEvents, pageable.getSort());
 
-        // Apply pagination
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), filteredEvents.size());
 
@@ -308,7 +358,7 @@ public class EventService {
     }
 
     /**
-     * Get events by price range (guide price)
+     * Get events by guide price range
      */
     public Page<EventResponseDTO> getEventsByGuidePriceRange(Integer minPrice, Integer maxPrice, Pageable pageable) {
         logger.debug("Fetching events by guide price range: {} - {}", minPrice, maxPrice);
@@ -319,10 +369,8 @@ public class EventService {
                 .filter(event -> filterByGuidePrice(event, minPrice, maxPrice))
                 .collect(Collectors.toList());
 
-        // Apply sorting
         applySorting(filteredEvents, pageable.getSort());
 
-        // Apply pagination
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), filteredEvents.size());
 
@@ -348,10 +396,8 @@ public class EventService {
                 .filter(event -> filterByTicketPrice(event, minPrice, maxPrice))
                 .collect(Collectors.toList());
 
-        // Apply sorting
         applySorting(filteredEvents, pageable.getSort());
 
-        // Apply pagination
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), filteredEvents.size());
 
@@ -528,4 +574,7 @@ public class EventService {
         }
         return dto;
     }
+
+
+
 }
