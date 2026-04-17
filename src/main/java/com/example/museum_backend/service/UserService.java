@@ -268,15 +268,15 @@ public class UserService implements UserDetailsService {
     public void fillDB() {
         logger.info("Starting to fill database with sample users");
 
-        User admin = new User(new SignUp("admin", "festivy.design@gmail.com", hashPassword("Admin777#"),
+        User admin = new User(new SignUp("admin", "admin@gmail.com", hashPassword("Admin777#"),
                 hashPassword("Admin777#")));
         admin.setRole(Role.ADMIN);
         admin.setVerifyMail(true);
         userRepository.save(admin);
 
 
-        User user = new User(new SignUp("festivy2026", "norikhayrapetyan94@gmail.com", hashPassword("Project2026$"),
-                hashPassword("Project2026$")));
+        User user = new User(new SignUp("user2026", "test@gmail.com", hashPassword("User777#"),
+                hashPassword("User777#")));
         user.setRole(Role.USER);
         user.setVerifyMail(true);
         userRepository.save(user);

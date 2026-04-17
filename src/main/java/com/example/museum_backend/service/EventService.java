@@ -130,6 +130,84 @@ public class EventService {
         return eventRepository.findByMuseum(museum, pageable).map(this::convertToResponseDTO);
     }
 
+    // ==================== MUSEUM NAME SEARCH METHODS (NEW) ====================
+
+    /**
+     * Search events by museum name (partial match supported)
+     */
+    public Page<EventResponseDTO> searchEventsByMuseumName(String museumName, Pageable pageable) {
+        logger.debug("Searching events by museum name: {}", museumName);
+
+        if (!StringUtils.hasText(museumName)) {
+            return getAllEvents(pageable);
+        }
+
+        List<Event> allEvents = eventRepository.findAll();
+
+        String searchName = museumName.toLowerCase().trim();
+
+        List<Event> filteredEvents = allEvents.stream()
+                .filter(event -> event.getMuseum() != null &&
+                        event.getMuseum().getName() != null &&
+                        event.getMuseum().getName().toLowerCase().contains(searchName))
+                .collect(Collectors.toList());
+
+        applySorting(filteredEvents, pageable.getSort());
+
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), filteredEvents.size());
+
+        if (start >= filteredEvents.size()) {
+            return new PageImpl<>(List.of(), pageable, filteredEvents.size());
+        }
+
+        List<EventResponseDTO> paginatedResults = filteredEvents.subList(start, end)
+                .stream()
+                .map(this::convertToResponseDTO)
+                .collect(Collectors.toList());
+
+        logger.info("Found {} events for museum name containing: {}", filteredEvents.size(), museumName);
+
+        return new PageImpl<>(paginatedResults, pageable, filteredEvents.size());
+    }
+
+    /**
+     * Search events by exact museum name
+     */
+    public Page<EventResponseDTO> searchEventsByExactMuseumName(String museumName, Pageable pageable) {
+        logger.debug("Searching events by exact museum name: {}", museumName);
+
+        if (!StringUtils.hasText(museumName)) {
+            return getAllEvents(pageable);
+        }
+
+        List<Event> allEvents = eventRepository.findAll();
+
+        List<Event> filteredEvents = allEvents.stream()
+                .filter(event -> event.getMuseum() != null &&
+                        event.getMuseum().getName() != null &&
+                        event.getMuseum().getName().equalsIgnoreCase(museumName.trim()))
+                .collect(Collectors.toList());
+
+        applySorting(filteredEvents, pageable.getSort());
+
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), filteredEvents.size());
+
+        if (start >= filteredEvents.size()) {
+            return new PageImpl<>(List.of(), pageable, filteredEvents.size());
+        }
+
+        List<EventResponseDTO> paginatedResults = filteredEvents.subList(start, end)
+                .stream()
+                .map(this::convertToResponseDTO)
+                .collect(Collectors.toList());
+
+        logger.info("Found {} events for exact museum name: {}", filteredEvents.size(), museumName);
+
+        return new PageImpl<>(paginatedResults, pageable, filteredEvents.size());
+    }
+
     public long getTotalEventsCount() {
         logger.debug("Fetching total events count");
         return eventRepository.count();
@@ -147,7 +225,7 @@ public class EventService {
         logger.info("Images updated successfully for event id: {}", eventId);
     }
 
-    // ==================== SEARCH METHODS WITH TICKET PRICE ====================
+    // ==================== SEARCH METHODS ====================
 
     /**
      * Search events with multiple filters (including ticket price)
@@ -157,12 +235,12 @@ public class EventService {
 
         List<Event> allEvents = eventRepository.findAll();
 
-        // Apply filters
         List<Event> filteredEvents = allEvents.stream()
                 .filter(event -> filterBySearchQuery(event, searchDTO.getQuery()))
                 .filter(event -> filterByCategory(event, searchDTO.getEventCategory()))
                 .filter(event -> filterByLocation(event, searchDTO.getLocation()))
                 .filter(event -> filterByMuseumId(event, searchDTO.getMuseumId()))
+                .filter(event -> filterByMuseumName(event, searchDTO.getMuseumName()))  // NEW filter
                 .filter(event -> filterByGuidePrice(event, searchDTO.getMinGuidePrice(), searchDTO.getMaxGuidePrice()))
                 .filter(event -> filterByTicketPrice(event, searchDTO.getMinTicketPrice(), searchDTO.getMaxTicketPrice()))
                 .filter(event -> filterByDateRange(event, searchDTO.getStartDateFrom(), searchDTO.getStartDateTo()))
@@ -170,10 +248,8 @@ public class EventService {
                 .filter(event -> filterByDuration(event, searchDTO.getMinDuration(), searchDTO.getMaxDuration()))
                 .collect(Collectors.toList());
 
-        // Apply sorting
         applySorting(filteredEvents, pageable.getSort());
 
-        // Apply pagination
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), filteredEvents.size());
 
@@ -440,6 +516,17 @@ public class EventService {
         return event.getMuseum() != null && event.getMuseum().getId().equals(museumId);
     }
 
+    // NEW: Filter by museum name
+    private boolean filterByMuseumName(Event event, String museumName) {
+        if (!StringUtils.hasText(museumName)) return true;
+
+        if (event.getMuseum() == null || event.getMuseum().getName() == null) {
+            return false;
+        }
+
+        return event.getMuseum().getName().toLowerCase().contains(museumName.toLowerCase().trim());
+    }
+
     private boolean filterByGuidePrice(Event event, Integer minPrice, Integer maxPrice) {
         Integer guidePrice = event.getGuidePrice();
         if (guidePrice == null) return true;
@@ -574,7 +661,4 @@ public class EventService {
         }
         return dto;
     }
-
-
-
 }
