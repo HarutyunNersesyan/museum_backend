@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-// In ImageStorageService.java
+
 
 @Service
 public class ImageStorageService {
@@ -28,7 +28,6 @@ public class ImageStorageService {
     public List<String> saveImages(List<MultipartFile> images) throws IOException {
         List<String> imageUrls = new ArrayList<>();
 
-        // Create upload directory if not exists
         Path uploadPath = Paths.get(uploadDir);
         if (!Files.exists(uploadPath)) {
             Files.createDirectories(uploadPath);
@@ -37,16 +36,13 @@ public class ImageStorageService {
         for (MultipartFile image : images) {
             if (image == null || image.isEmpty()) continue;
 
-            // Generate unique filename
             String originalFilename = StringUtils.cleanPath(image.getOriginalFilename());
             String fileExtension = getFileExtension(originalFilename);
             String newFilename = UUID.randomUUID().toString() + fileExtension;
 
-            // Save file
             Path targetPath = uploadPath.resolve(newFilename);
             Files.copy(image.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
 
-            // Generate URL
             String imageUrl = baseUrl + "/uploads/" + newFilename;
             imageUrls.add(imageUrl);
 

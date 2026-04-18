@@ -7,11 +7,9 @@ import com.example.museum_backend.model.dto.EventSearchDTO;
 import com.example.museum_backend.model.entity.Event;
 import com.example.museum_backend.model.entity.Museum;
 import com.example.museum_backend.model.enums.EventCategory;
-import com.example.museum_backend.model.enums.EventType;
 import com.example.museum_backend.model.enums.Location;
 import com.example.museum_backend.repository.EventRepository;
 import com.example.museum_backend.repository.MuseumRepository;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,8 +32,6 @@ public class EventService {
     private static final Logger logger = LoggerFactory.getLogger(EventService.class);
     private final EventRepository eventRepository;
     private final MuseumRepository museumRepository;
-
-    // ==================== EXISTING METHODS ====================
 
     @Transactional
     public EventResponseDTO createEvent(EventRequestDTO request, String adminEmail) {
@@ -130,11 +125,6 @@ public class EventService {
         return eventRepository.findByMuseum(museum, pageable).map(this::convertToResponseDTO);
     }
 
-    // ==================== MUSEUM NAME SEARCH METHODS (NEW) ====================
-
-    /**
-     * Search events by museum name (partial match supported)
-     */
     public Page<EventResponseDTO> searchEventsByMuseumName(String museumName, Pageable pageable) {
         logger.debug("Searching events by museum name: {}", museumName);
 
@@ -171,9 +161,6 @@ public class EventService {
         return new PageImpl<>(paginatedResults, pageable, filteredEvents.size());
     }
 
-    /**
-     * Search events by exact museum name
-     */
     public Page<EventResponseDTO> searchEventsByExactMuseumName(String museumName, Pageable pageable) {
         logger.debug("Searching events by exact museum name: {}", museumName);
 
@@ -225,11 +212,6 @@ public class EventService {
         logger.info("Images updated successfully for event id: {}", eventId);
     }
 
-    // ==================== SEARCH METHODS ====================
-
-    /**
-     * Search events with multiple filters (including ticket price)
-     */
     public Page<EventResponseDTO> searchEvents(EventSearchDTO searchDTO, Pageable pageable) {
         logger.debug("Searching events with filters: {}", searchDTO);
 
@@ -487,8 +469,6 @@ public class EventService {
         return new PageImpl<>(paginatedResults, pageable, filteredEvents.size());
     }
 
-    // ==================== PRIVATE FILTER METHODS ====================
-
     private boolean filterBySearchQuery(Event event, String query) {
         if (!StringUtils.hasText(query)) return true;
 
@@ -516,7 +496,6 @@ public class EventService {
         return event.getMuseum() != null && event.getMuseum().getId().equals(museumId);
     }
 
-    // NEW: Filter by museum name
     private boolean filterByMuseumName(Event event, String museumName) {
         if (!StringUtils.hasText(museumName)) return true;
 
@@ -568,7 +547,6 @@ public class EventService {
         return true;
     }
 
-    // ==================== SORTING METHOD ====================
 
     private void applySorting(List<Event> events, Sort sort) {
         if (sort == null || !sort.iterator().hasNext()) return;
@@ -638,7 +616,6 @@ public class EventService {
         return s1.compareToIgnoreCase(s2);
     }
 
-    // ==================== CONVERSION METHOD ====================
 
     private EventResponseDTO convertToResponseDTO(Event event) {
         EventResponseDTO dto = new EventResponseDTO();
