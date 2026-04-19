@@ -47,7 +47,7 @@ public class MailSenderService {
         user.setPin(pin);
         userService.update(user);
 
-        sendEmail(email, "Verify code", pin + "\n\n Welcome to the Museum! Discover the beauty of art, culture, and history all in one place.");
+        sendEmail(email, "Verify code", pin + "\n\n Բարի գալուստ։ Բացահայտեք արվեստի, մշակույթի և պատմության գեղեցկությունը՝ մեկ վայրում");
 
         schedulePinReset(email);
 
