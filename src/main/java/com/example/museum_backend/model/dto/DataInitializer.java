@@ -28,7 +28,6 @@ public class DataInitializer {
             return;
         }
 
-        // ==================== HISTORY ====================
         Museum history = new Museum();
         history.setName("History Museum of Armenia");
         history = museumRepository.save(history);
@@ -149,6 +148,72 @@ public class DataInitializer {
         Museum megerian = new Museum();
         megerian.setName("Megerian Carpet Museum");
         megerian = museumRepository.save(megerian);
+
+        Museum louvre = new Museum();
+        louvre.setName("Louvre");
+        louvre = museumRepository.save(louvre);
+
+        Museum british_museum = new Museum();
+        british_museum.setName("British Museum");
+
+        Museum metropolitan = new Museum();
+        metropolitan.setName("Metropolitan Museum of Art");
+        metropolitan = museumRepository.save(metropolitan);
+
+        // ==================== LOUVRE ====================
+
+        Event l1 = new Event();
+        l1.setName("Լուվրի գլուխգործոցներ");
+        l1.setDescription("Լուվրի թանգարանում ներկայացվում են համաշխարհային արվեստի ամենահայտնի գործերը՝ սկսած հնագույն քաղաքակրթություններից մինչև Վերածննդի գլուխգործոցներ։ Այցելուները հնարավորություն կունենան տեսնել Մոնա Լիզան և այլ արժեքավոր ստեղծագործություններ։");
+        l1.setEventCategory(EventCategory.ART);
+        l1.setEventType(EventType.MOBILE);
+        l1.setImageUrls(List.of("http://localhost:8080/uploads/default5.jpg"));
+        l1.setEventDate(buildDate(120, 11, 0));
+        l1.setPhoneNumber("+33 1 40 20 50 50");
+        l1.setGuidePrice(5000);
+        l1.setTicketPrice(10000);
+        l1.setLocation(Location.SEVAN);
+        l1.setDuration(3);
+        l1.setMuseum(louvre);
+        eventRepository.save(l1);
+
+
+// ==================== BRITISH MUSEUM ====================
+
+        british_museum = museumRepository.save(british_museum);
+
+        Event b1 = new Event();
+        b1.setName("Հնագույն քաղաքակրթություններ");
+        b1.setDescription("Բրիտանական թանգարանում ներկայացված են հին Եգիպտոսի, Միջագետքի և Հունաստանի եզակի ցուցանմուշներ։ Այցելուները կարող են տեսնել Ռոզետայի քարը և այլ պատմական կարևոր արտեֆակտներ։");
+        b1.setEventCategory(EventCategory.HISTORY);
+        b1.setEventType(EventType.MOBILE);
+        b1.setImageUrls(List.of("http://localhost:8080/uploads/default8.jpg"));
+        b1.setEventDate(buildDate(130, 12, 0));
+        b1.setPhoneNumber("+44 20 7323 8299");
+        b1.setGuidePrice(4000);
+        b1.setTicketPrice(9000);
+        b1.setLocation(Location.ARTASHAT);
+        b1.setDuration(3);
+        b1.setMuseum(british_museum);
+        eventRepository.save(b1);
+
+
+// ==================== METROPOLITAN ====================
+
+        Event m2 = new Event();
+        m2.setName("Արվեստի գլոբալ ճանապարհորդություն");
+        m2.setDescription("Մետրոպոլիտեն արվեստի թանգարանը առաջարկում է արվեստի պատմության լայն շրջանակ՝ ներառյալ եվրոպական, ասիական և ամերիկյան արվեստի գլուխգործոցներ։ Ցուցադրությունը ընդգրկում է հազարավոր տարիների մշակութային զարգացում։");
+        m2.setEventCategory(EventCategory.ART);
+        m2.setEventType(EventType.MOBILE);
+        m2.setImageUrls(List.of("http://localhost:8080/uploads/default7.jpg"));
+        m2.setEventDate(buildDate(140, 13, 0));
+        m2.setPhoneNumber("+1 212-535-7710");
+        m2.setGuidePrice(6000);
+        m2.setTicketPrice(12000);
+        m2.setLocation(Location.IJEVAN);
+        m2.setDuration(4);
+        m2.setMuseum(metropolitan);
+        eventRepository.save(m2);
     }
 
     private LocalDateTime buildDate(int days, int hour, int minute) {
