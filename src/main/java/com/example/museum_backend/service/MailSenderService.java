@@ -10,6 +10,7 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -72,6 +73,45 @@ public class MailSenderService {
 
         return "A new verification code has been sent to your email.";
     }
+
+    // MailSenderService.java - ավելացնել նոր մեթոդ
+    // MailSenderService.java - ավելացնել այս մեթոդը
+
+    public void sendTicketConfirmation(String toEmail, String userName, Map<String, Object> bookingDetails) {
+        String subject = "Ձեր տոմսի հաստատում - " + bookingDetails.get("eventName");
+
+        String message = buildTicketEmailContent(userName, bookingDetails);
+
+        sendEmail(toEmail, subject, message);
+    }
+
+    private String buildTicketEmailContent(String userName, Map<String, Object> booking) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Բարև Ձեզ, ").append(userName).append("!\n\n");
+        sb.append("Շնորհակալություն գնման համար։ Ստորև ներկայացված են ձեր տոմսի տվյալները.\n\n");
+        sb.append("═══════════════════════════════════════════\n");
+        sb.append("🎫 ՏՈՄՍԻ ՀԱՍՏԱՏՈՒՄ\n");
+        sb.append("═══════════════════════════════════════════\n\n");
+        sb.append("📌 Ամրագրման համար՝ ").append(booking.get("bookingId")).append("\n");
+        sb.append("🎭 Միջոցառում՝ ").append(booking.get("eventName")).append("\n");
+        sb.append("🏛️ Թանգարան՝ ").append(booking.get("museumName")).append("\n");
+        sb.append("📍 Վայր՝ ").append(booking.get("location")).append("\n");
+        sb.append("🎫 Տոմսերի քանակ՝ ").append(booking.get("ticketQuantity")).append("\n");
+        sb.append("💰 Տոմսի գին՝ ").append(booking.get("ticketPrice")).append(" ֏\n");
+        if ((Boolean) booking.get("includeGuide")) {
+            sb.append("🎯 Ուղեցույցի ծառայություն՝ Ներառված է (+").append(booking.get("guidePrice")).append(" ֏)\n");
+        }
+        sb.append("💵 Ընդհանուր գումար՝ ").append(booking.get("totalAmount")).append(" ֏\n");
+        sb.append("\n═══════════════════════════════════════════\n");
+        sb.append("📧 Տոմսը ուղարկվել է ձեր էլ. հասցեին:\n");
+        sb.append("   ").append(booking.get("email")).append("\n");
+        sb.append("═══════════════════════════════════════════\n\n");
+        sb.append("Մանրամասների համար այցելեք ձեր անձնական էջ։\n");
+        sb.append("Հարգանքներով՝ Թանգարանների Համակարգ\n");
+
+        return sb.toString();
+    }
+
 
     public void schedulePinReset(String mail) {
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);

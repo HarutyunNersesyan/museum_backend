@@ -1,3 +1,4 @@
+// SecurityConfig.java - Updated version
 package com.example.museum_backend.api.security;
 
 import com.example.museum_backend.service.UserService;
@@ -41,25 +42,32 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests((requests) -> requests
-                        // Public endpoints - no authentication required
+                        // ==================== PUBLIC ENDPOINTS - NO AUTHENTICATION ====================
+                        // User public endpoints
                         .requestMatchers("/api/public/user/signUp").permitAll()
                         .requestMatchers("/api/public/user/verify").permitAll()
                         .requestMatchers("/api/public/user/resend-verification").permitAll()
                         .requestMatchers("/api/public/user/forgotPassword").permitAll()
                         .requestMatchers("/api/public/user/delete/verify/**").permitAll()
+                        .requestMatchers("/api/booking/**").permitAll()
+
+                        // Auth endpoints
                         .requestMatchers("/account/auth").permitAll()
 
-                        // Static resources - allow access to uploaded images
+                        // Static resources
                         .requestMatchers("/uploads/**").permitAll()
 
-                        // Swagger/OpenAPI documentation (if you want to allow)
+                        // Swagger
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
 
-                        // Authenticated endpoints
+                        // ==================== AUTHENTICATED ENDPOINTS ====================
+                        // All /api/private/** require authentication
                         .requestMatchers("/api/private/**").authenticated()
+
+                        // All /api/public/** (except the ones above) require authentication
                         .requestMatchers("/api/public/**").authenticated()
 
-                        // All other requests require authentication
+                        // All other requests
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);

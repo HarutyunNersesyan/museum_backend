@@ -275,7 +275,7 @@ public class UserService implements UserDetailsService {
         userRepository.save(admin);
 
 
-        User user = new User(new SignUp("user2026", "test@gmail.com", hashPassword("User777#"),
+        User user = new User(new SignUp("user2026", "harut.037n@gmail.com", hashPassword("User777#"),
                 hashPassword("User777#")));
         user.setRole(Role.USER);
         user.setVerifyMail(true);

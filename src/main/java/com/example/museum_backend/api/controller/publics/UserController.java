@@ -21,7 +21,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -379,6 +381,39 @@ public class UserController {
         } catch (Exception e) {
             logger.error("Failed to get upcoming events", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    // UserController.java - ավելացնել նոր endpoint
+    @PostMapping("/send-ticket-confirmation")
+    public ResponseEntity<?> sendTicketConfirmation(@RequestBody TicketConfirmationRequest request) {
+        logger.debug("Sending ticket confirmation to: {}", request.getEmail());
+        try {
+            User user = userService.findUserByEmail(request.getEmail())
+                    .orElseThrow(() -> new CustomExceptions.UserNotFoundException("User not found"));
+
+            Map<String, Object> bookingDetails = new HashMap<>();
+            bookingDetails.put("bookingId", request.getBookingId());
+            bookingDetails.put("eventName", request.getEventName());
+            bookingDetails.put("museumName", request.getMuseumName());
+            bookingDetails.put("location", request.getLocation());
+            bookingDetails.put("eventDate", request.getEventDate());
+            bookingDetails.put("ticketQuantity", request.getTicketQuantity());
+            bookingDetails.put("ticketPrice", request.getTicketPrice());
+            bookingDetails.put("guidePrice", request.getGuidePrice());
+            bookingDetails.put("includeGuide", request.isIncludeGuide());
+            bookingDetails.put("totalAmount", request.getTotalAmount());
+            bookingDetails.put("email", request.getEmail());
+
+            mailSenderService.sendTicketConfirmation(request.getEmail(), user.getUserName(), bookingDetails);
+
+            return ResponseEntity.ok("Ticket confirmation sent successfully");
+        } catch (CustomExceptions.UserNotFoundException e) {
+            logger.warn("User not found: {}", request.getEmail());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            logger.error("Failed to send ticket confirmation", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to send email");
         }
     }
 }
